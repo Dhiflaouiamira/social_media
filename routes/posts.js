@@ -1,11 +1,10 @@
 const router = require("express").Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
-const authMiddleware = require("../middleware/authMiddleware"); 
-const Jwt = require("jsonwebtoken");
 
 //create a post
-router.post("/",authMiddleware, async (req, res) => {
+
+router.post("/", async (req, res) => {
   const newPost = new Post(req.body);
   try {
     const savedPost = await newPost.save();
@@ -16,7 +15,7 @@ router.post("/",authMiddleware, async (req, res) => {
 });
 //update a post
 
-router.put("/:id",authMiddleware, async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (post.userId === req.body.userId) {
@@ -31,7 +30,7 @@ router.put("/:id",authMiddleware, async (req, res) => {
 });
 //delete a post
 
-router.delete("/:id",authMiddleware, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (post.userId === req.body.userId) {
@@ -46,7 +45,7 @@ router.delete("/:id",authMiddleware, async (req, res) => {
 });
 //like / dislike a post
 
-router.put("/:id/like",authMiddleware, async (req, res) => {
+router.put("/:id/like", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post.likes.includes(req.body.userId)) {
@@ -60,18 +59,9 @@ router.put("/:id/like",authMiddleware, async (req, res) => {
     res.status(500).json(err);
   }
 });
-
-//get all posts
-
-router.get("/",authMiddleware, async (req, res) => {
-    Post.find().exec()
-    .then(posts => res.send(posts))
-    .catch(err => res.status(400).json(err))
-
-});
 //get a post
 
-router.get("/:id",authMiddleware, async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     res.status(200).json(post);
@@ -82,16 +72,28 @@ router.get("/:id",authMiddleware, async (req, res) => {
 
 //get timeline posts
 
-router.get("/timeline/all",authMiddleware, async (req, res) => {
+router.get("/timeline/:userId", async (req, res) => {
   try {
-    const currentUser = await User.findById(req.body.userId);
+    const currentUser = await User.findById(req.params.userId);
     const userPosts = await Post.find({ userId: currentUser._id });
     const friendPosts = await Promise.all(
       currentUser.followings.map((friendId) => {
         return Post.find({ userId: friendId });
       })
     );
-    res.json(userPosts.concat(...friendPosts))
+    res.status(200).json(userPosts.concat(...friendPosts));
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+//get user's all posts
+
+router.get("/profile/:username", async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    const posts = await Post.find({ userId: user._id });
+    res.status(200).json(posts);
   } catch (err) {
     res.status(500).json(err);
   }

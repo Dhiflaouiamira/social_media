@@ -4,16 +4,11 @@ const UserSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
+      require: true,
+      min: 3,
+      max: 20,
       unique: true,
     },
-
-    role: {
-      type: String,
-      enum: ['admin', 'agent', 'client'],
-      default: 'client'
-    },
-
     email: {
       type: String,
       required: true,
@@ -65,6 +60,4 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model("User", UserSchema);
-
-module.exports = { User };
+module.exports = mongoose.model("User", UserSchema);
